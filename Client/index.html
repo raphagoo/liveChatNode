@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <span id="listenerTyping"></span>
+    <span id="someoneTypes"></span>
+    <form id="usernameForm" action="">
+            <input id="username" autocomplete="off"/><button>New username</button>
+
+    </form>
+    <form id="messageForm" action="">
+      <input onkeypress="onKeyDown();" id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="client.js"></script>
+  </body>
+</html>
