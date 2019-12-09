@@ -4,44 +4,24 @@ const app = express();
 const http = require('http').createServer(app);
 const path = require('path');
 const io = require('socket.io')(http);
-const mongo = require('mongodb');
-const mongoClient = mongo.MongoClient;
-const options = {
-  keepAlive: 1,
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-};
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 const url = "mongodb://localhost:27017/";
-let dbo;
 let messagesHistory;
 
-//Initialisation BDD
-mongoClient.connect(url, options)
-    .then(
-        response => {
-          console.log("Database created");
-          dbo = response.db("mydb");
-          dbo.createCollection("messages")
-              .then(
-                  response => {
-                    console.log("messages created")
-                  },
-                  error => {
-                    throw error;
-                  });
-          dbo.createCollection("users")
-              .then(
-                  response => {
-                    console.log("users created")
-                  },
-                  error => {
-                    throw error
-                  }
-              )
-        },
-        error => {
-          throw error
-        });
+mongoose.connect(url, {useNewUrlParser: true});
+let messageSchema = new Schema({
+    date: String,
+    user: String,
+    message: String
+});
+
+let Message = mongoose.model('Message', messageSchema);
+let db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+    // we're connected!
+});
 
 
 let users = {};
@@ -52,7 +32,7 @@ app.use(express.static(path.join(__dirname, 'Client')));
 io.on('connection', function(socket){
 
   //Récupération des messages
-  dbo.collection('messages').find().toArray()
+  Message.find()
       .then(
           response => {
             messagesHistory = response;
@@ -66,6 +46,7 @@ io.on('connection', function(socket){
   //Nouveau pseudo
   socket.on('send-nickname', function(nickname) {
     users[socket.id] = nickname;
+    console.log(users)
   });
 
   io.emit('Quelqu\'un se connecte');
@@ -87,14 +68,14 @@ io.on('connection', function(socket){
     let dt = new Date();
     let utcDate = dt.toUTCString();
     let messageFinal = utcDate + ' - ' + users[socket.id] + ' : ' + msg;
-    let messageToInsert = {
+    let messageToInsert = new Message({
       date: utcDate,
       user: users[socket.id],
       message: msg
-    };
+    });
 
     //Insertion message en bdd
-    dbo.collection('messages').insert(messageToInsert, (err, res) => {
+    Message.create(messageToInsert, (err, res) => {
       if(err) throw err;
       console.log("message inserted");
       io.emit('chat message', messageFinal);

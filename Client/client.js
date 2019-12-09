@@ -1,12 +1,6 @@
 const socket = io();
 socket.on("firstMessage", data => console.log(data));
 
-const options = {
-    method: 'POST'
-};
-
-fetch('/', options).then(response => console.log(response));
-
 $('#usernameForm').submit(function(e){
     e.preventDefault(); // prevents page reloading
     $('#usernameForm').hide();
